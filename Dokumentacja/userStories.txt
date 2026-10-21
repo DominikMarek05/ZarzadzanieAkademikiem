@@ -1,0 +1,29 @@
+1. Student rezerwujący zasoby wspólne (Student 1)
+Mieszkaniec chcący zarezerwować obiekt sportowy, pralkę, suszarkę lub świetlicę bez dzwonienia do recepcji.
+	• Given: Zalogowany student posiadający aktywny status mieszkańca akademika.
+	• When: Przejdzie do modułu „Rezerwacje”, wybierze dany obiekt (np. boisko, pralkę) oraz wskaże dogodny termin w kalendarzu i kliknie „Zarezerwuj”.
+	• Then: Termin zostaje zablokowany w harmonogramie, a student otrzymuje natychmiastowe potwierdzenie rezerwacji w systemie.
+
+2. Wybór pokoju przez przyjętego kandydata (Student 2)
+Nowo przyjęty student z zaakceptowanym wnioskiem, który wybiera konkretny dom studencki i dostępny pokój.
+	• Given: Student z zaakceptowanym wnioskiem o przydział miejsca, zalogowany na swoje konto.
+	• When: Otworzy zakładkę „Wybór miejsca” i zaznaczy preferowany akademik oraz wolne łóżko/pokój z interaktywnej listy.
+	• Then: System przypisuje studenta do wybranego pokoju i generuje podsumowanie przydziału wraz z informacjami kwaterunkowymi.
+
+3. Ciche zgłaszanie usterki (Student 3 - introwertyk)
+Mieszkaniec zgłaszający awarię techniczną w pokoju lub przestrzeni wspólnej w pełni cyfrowo, bez kontaktu osobistego czy telefonicznego.
+	• Given: Zalogowany mieszkaniec akademika znajdujący się w widoku panelu głównego.
+	• When: Przejdzie do zakładki „Zgłoś usterkę”, uzupełni opis problemu, opcjonalnie załączy zdjęcie i kliknie „Wyślij zgłoszenie”.
+	• Then: Zgłoszenie trafia do kolejki personelu technicznego, a użytkownik widzi status zgłoszenia (np. W toku, Naprawione) w aplikacji.
+
+4. Publikacja ogłoszeń przez personel (Kierownik / Recepcja)
+Pracownik administracji lub recepcji publikujący ważny komunikat dla mieszkańców (np. o braku ciepłej wody czy przeglądzie).
+	• Given: Pracownik zalogowany na konto z uprawnieniami administracyjnymi w module „Komunikacja / Ogłoszenia”.
+	• When: Wpisze treść ogłoszenia, ustali grupę odbiorców (np. całe piętro, cały akademik) i kliknie „Opublikuj”.
+	• Then: Ogłoszenie pojawia się na tablicy informacyjnej w panelach studentów oraz zostaje wysłane powiadomienie systemowe.
+
+5. Zarządzanie mieszkańcami i wgląd w dane (Kierownik / Recepcja)
+Pracownik recepcji weryfikujący stan zakwaterowania i dane kontaktowe mieszkańca.
+	• Given: Pracownik zalogowany do panelu zarządczego akademika.
+	• When: Wyszuka numer pokoju lub nazwisko studenta w zakładce „Mieszkańcy”.
+Then: Wyświetla się pełna karta mieszkańca z danymi kontaktowymi, statusem płatności oraz historią jego zgłoszeń i rezerwacji.
