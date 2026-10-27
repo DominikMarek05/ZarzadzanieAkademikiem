@@ -9,6 +9,6 @@ public class Pokoj
 	public int Pietro { get; set; }
 
 	public int LiczbaOsob { get; set; }
-
+    
 	public bool CzyWolneLozka { get; set; } = true;
 }

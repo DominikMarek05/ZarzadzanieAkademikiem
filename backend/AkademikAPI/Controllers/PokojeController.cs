@@ -11,7 +11,7 @@ namespace AkademikAPI.Controllers;
 public class PokojeController : ControllerBase
 {
 	private readonly AkademikDbContext _context;
-
+	
 	public PokojeController(AkademikDbContext context){
 		_context = context;
 	}
