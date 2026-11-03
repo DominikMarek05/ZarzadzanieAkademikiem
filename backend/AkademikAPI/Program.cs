@@ -1,12 +1,28 @@
 using Scalar.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using AkademikAPI.Data;
+using AkademikAPI.Models;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddJsonFile(
+    "appsettings.json",
+    optional: false,
+    reloadOnChange: true
+);
+
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+
+dataSourceBuilder.MapEnum<Availability>();
+dataSourceBuilder.MapEnum<SportCourtType>();
+dataSourceBuilder.MapEnum<RoomPrefix>();
+
+var dataSource = dataSourceBuilder.Build();
 
 builder.Services.AddDbContext<AkademikDbContext>(options =>
 	options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -39,8 +55,3 @@ app.UseHttpsRedirection();
 
 app.MapControllers();
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

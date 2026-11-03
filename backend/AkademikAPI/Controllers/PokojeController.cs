@@ -17,7 +17,7 @@ public class PokojeController : ControllerBase
 	}
 
 	[HttpGet]
-	public async Task<ActionResult<IEnumerable<Pokoj>>> getPokoje(){
+	public async Task<ActionResult<IEnumerable<Pokoj>>> GetPokoje(){
 		return await _context.Pokoje.ToListAsync();
 	}
 
@@ -25,6 +25,6 @@ public class PokojeController : ControllerBase
 	public async Task<ActionResult<IEnumerable<Pokoj>>> PostPokoj(Pokoj nowyPokoj) { 
 		_context.Pokoje.Add(nowyPokoj);
 		await _context.SaveChangesAsync();
-		return CreatedAtAction(nameof(getPokoje), new { id = nowyPokoj.Id }, nowyPokoj);
+		return CreatedAtAction(nameof(GetPokoje), new { id = nowyPokoj.Id }, nowyPokoj);
 	}
 }
