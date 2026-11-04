@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Xml.Serialization;
 
 namespace AkademikAPI.Models;
 
 public enum Availability { Available, Unavailable, Maintenance }
 public enum SportCourtType { Basketball, Volleyball, Football }
 
+/// <summary>
+/// Reprezentuje obiekt sportowy (tabela sport_courts).
+/// </summary>
 [Table("sport_courts", Schema = "public")]
 public class SportCourt
 {
@@ -18,15 +20,18 @@ public class SportCourt
     public string CourtName { get; set; } = "";
 
     [Column("court_type")]
-    public string CourtType { get; set; }
+    public string CourtType { get; set; } = "";
 
     [Column("status")]
-    public string Status { get; set; }
+    public string Status { get; set; } = "";
 
     // Relacja: jedno boisko ma wiele rezerwacji
     public List<SportCourtReservation> Reservations { get; set; } = new();
 }
 
+/// <summary>
+/// Reprezentuje rezerwację obiektu sportowego (tabela sport_courts_reservation).
+/// </summary>
 [Table("sport_courts_reservation", Schema = "public")]
 public class SportCourtReservation
 {
@@ -40,7 +45,7 @@ public class SportCourtReservation
     public int StudentId { get; set; }
 
     [Column("reservation_date")]
-    public DateTime ReservationDate { get; set; }
+    public DateOnly ReservationDate { get; set; }
 
     [Column("start_time")]
     public TimeSpan? StartTime { get; set; }
