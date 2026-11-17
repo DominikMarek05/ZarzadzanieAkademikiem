@@ -43,6 +43,7 @@ function LoginView({ onLoginSuccess }) {
     const [studentNumber, setStudentNumber] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [mode, setMode] = useState('login');
 
     const demoAccounts = [
         { studentNumber: '123456', name: 'Jan' },
@@ -50,6 +51,12 @@ function LoginView({ onLoginSuccess }) {
         { studentNumber: '345678', name: 'Piotr' },
         { studentNumber: '456789', name: 'Maria' },
     ];
+    // pola formularza dla nowego studenta
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [fieldOfStudy, setFieldOfStudy] = useState('');
+    const [yearOfStudy, setYearOfStudy] = useState(1);
 
     async function handleLogin(e) {
         if (e) e.preventDefault();
@@ -81,6 +88,45 @@ function LoginView({ onLoginSuccess }) {
         }
     }
 
+    async function handleRegister(e) {
+        e.preventDefault();
+        if (
+            !studentNumber.trim() ||
+            !firstName.trim() ||
+            !lastName.trim() ||
+            !email.trim() ||
+            !fieldOfStudy.trim()
+        ) {
+            setError('Podane dane są nieprawidłowe, proszę wszystko uzupełnić!');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        try {
+            const res = await fetch(`${AUTH_API_URL}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentNumber: studentNumber.trim(),
+                    firstName: studentNumber.trim(),
+                    lastName: lastName.trim(),
+                    email: email.trim(),
+                    fieldOfStudy: fieldOfStudy.trim(),
+                    yearOfStudy: Number(yearOfStudy),
+                }),
+            });
+
+            const data = await res.json().catch(() => null);
+            if (!res.ok) throw new Error(data?.message || 'Nie udało się zarejestrować kandydata.');
+
+            onLoginSuccess(data.student);
+        } catch (err) {
+            setError(err.message || 'Błąd połączenia z backendem.');
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return (
         <div className="login-wrapper">
             <div className="login-card">
@@ -92,48 +138,174 @@ function LoginView({ onLoginSuccess }) {
                     </div>
                 </div>
 
-                <div className="login-heading">
-                    <h1>Logowanie studenta</h1>
-                    <p>Wpisz numer indeksu, aby uzyskać dostęp do rezerwacji.</p>
-                </div>
-
-                {error && <div className="login-error-alert">{error}</div>}
-
-                <form className="login-form" onSubmit={handleLogin}>
-                    <div className="login-field">
-                        <label htmlFor="login-student-number">Numer indeksu (tabela students)</label>
-                        <input
-                            id="login-student-number"
-                            type="text"
-                            placeholder="np. 123456"
-                            value={studentNumber}
-                            onChange={(e) => setStudentNumber(e.target.value)}
-                            maxLength={10}
-                            autoFocus
-                        />
-                    </div>
-
-                    <button type="submit" className="login-submit-button" disabled={loading || !studentNumber.trim()}>
-                        <LogIn size={18} />
-                        {loading ? 'Weryfikacja w bazie...' : 'Zaloguj się'}
+                <div className="auth-mode-tabs">
+                    <button
+                        type="button"
+                        className={`auth-tab ${mode === 'login' ? 'active' : ''}`}
+                        onClick={() => {
+                            setMode('login');
+                            setError('');
+                        }}
+                    >
+                        Logowanie
                     </button>
-                </form>
-
-                <div className="login-quick-accounts">
-                    <p>Konta testowe z bazy danych:</p>
-                    <div className="login-chips">
-                        {demoAccounts.map((acc) => (
-                            <button
-                                key={acc.studentNumber}
-                                type="button"
-                                className="login-chip"
-                                onClick={() => setStudentNumber(acc.studentNumber)}
-                            >
-                                <strong>{acc.studentNumber}</strong> · {acc.name}
-                            </button>
-                        ))}
-                    </div>
+                    <button
+                        type="button"
+                        className={`auth-tab ${mode === 'register' ? 'active' : ''}`}
+                        onClick={() => {
+                            setMode('register');
+                            setError('');
+                        }}
+                    >
+                        Rejestracja
+                    </button>
                 </div>
+
+                <div className="login-heading">
+                    <h1>{mode === 'login' ? 'Logowanie studenta' : 'Rejestracja kandydata'}</h1>
+                    <p>
+                        {mode === 'login'
+                            ? 'Wpisz numer indeksu, aby uzyskać dostęp do rezerwacji.'
+                            : 'Wypełnij formularz aby stworzyć profil'}
+                    </p>
+                </div>
+
+                {error && (
+                    <div className="login-error-alert">{error}, sprawdź działanie Backendu!</div>
+                )}
+                {mode === 'login' ? (
+                    <>
+                        <form className="login-form" onSubmit={handleLogin}>
+                            <div className="login-field">
+                                <label htmlFor="login-student-number">
+                                    Numer indeksu (tabela students)
+                                </label>
+                                <input
+                                    id="login-student-number"
+                                    type="text"
+                                    placeholder="np. 123456"
+                                    value={studentNumber}
+                                    onChange={(e) => setStudentNumber(e.target.value)}
+                                    maxLength={6}
+                                    autoFocus
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="login-submit-button"
+                                disabled={loading || !studentNumber.trim()}
+                            >
+                                {loading ? 'Weryfikacja w bazie...' : 'Zaloguj się'}
+                            </button>
+                        </form>
+
+                        <div className="login-quick-accounts">
+                            <p>Konta testowe z bazy danych:</p>
+                            <div className="login-chips">
+                                {demoAccounts.map((acc) => (
+                                    <button
+                                        key={acc.studentNumber}
+                                        type="button"
+                                        className="login-chip"
+                                        onClick={() => setStudentNumber(acc.studentNumber)}
+                                    >
+                                        <strong>{acc.studentNumber}</strong> · {acc.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <form className="login-form" onSubmit={handleRegister}>
+                        <div className="login-row-2">
+                            <div className="login-field">
+                                <label htmlFor="reg-first-name">Imię</label>
+                                <input
+                                    id="reg-first-name"
+                                    type="text"
+                                    placeholder="np. Dominik"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="login-field">
+                                <label htmlFor="reg-last-name">Nazwisko</label>
+                                <input
+                                    id="reg-last-name"
+                                    type="text"
+                                    placeholder="Marek"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="login-field">
+                            <label htmlFor="reg-email">E-mail</label>
+                            <input
+                                id="reg-email"
+                                type="email"
+                                placeholder="dommarek@gmail.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="login-row-2">
+                            <div className="login-field">
+                                <label htmlFor="reg-index">Numer indeksu (6 cyfr)</label>
+                                <input
+                                    id="reg-index"
+                                    type="text"
+                                    placeholder="123456"
+                                    maxLength={6}
+                                    value={studentNumber}
+                                    onChange={(e) => setStudentNumber(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="login-field">
+                                <label htmlFor="reg-year">Rok studiów</label>
+                                <input
+                                    id="reg-year"
+                                    type="number"
+                                    min={1}
+                                    max={5}
+                                    placeholder="1"
+                                    value={yearOfStudy}
+                                    onChange={(e) => setYearOfStudy(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="login-field">
+                            <label htmlFor="reg-field">Kierunek studiów</label>
+                            <input
+                                id="reg-field"
+                                type="text"
+                                placeholder="np. Informatyka techniczna"
+                                value={fieldOfStudy}
+                                onChange={(e) => setFieldOfStudy(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className="login-chips">
+                            <button
+                                type="submit"
+                                className="login-submit-button"
+                                disabled={loading || !studentNumber.trim()}
+                            >
+                                {loading ? 'Weryfikacja w bazie...' : 'Zarejestruj kandydata'}
+                            </button>
+                        </div>
+                    </form>
+                )}
             </div>
         </div>
     );
@@ -179,7 +351,9 @@ function Sidebar({ activeView, setActiveView, onLogout }) {
                     >
                         <Icon size={20} />
                         {!collapsed && <span>{label}</span>}
-                        {!collapsed && activeView === id && <ChevronRight size={17} className="nav-arrow" />}
+                        {!collapsed && activeView === id && (
+                            <ChevronRight size={17} className="nav-arrow" />
+                        )}
                     </button>
                 ))}
             </nav>
@@ -194,7 +368,11 @@ function Sidebar({ activeView, setActiveView, onLogout }) {
                     {!collapsed && <span>Mój profil</span>}
                 </button>
 
-                <button className="nav-item logout-button" onClick={onLogout} title={collapsed ? 'Wyloguj się' : undefined}>
+                <button
+                    className="nav-item logout-button"
+                    onClick={onLogout}
+                    title={collapsed ? 'Wyloguj się' : undefined}
+                >
                     <LogOut size={20} />
                     {!collapsed && <span>Wyloguj się</span>}
                 </button>
@@ -301,10 +479,34 @@ function Dashboard({ setActiveView }) {
             </div>
 
             <div className="shortcut-grid">
-                <Shortcut icon={WashingMachine} title="Pralnie i suszarnie" description="Zarezerwuj termin prania" color="blue" onClick={() => setActiveView('laundry')} />
-                <Shortcut icon={Dumbbell} title="Boiska sportowe" description="Zarezerwuj obiekt sportowy" color="green" onClick={() => setActiveView('sports')} />
-                <Shortcut icon={Wrench} title="Zgłoś usterkę" description="Przekaż problem administracji" color="orange" onClick={() => setActiveView('repairs')} />
-                <Shortcut icon={FileText} title="Wnioski" description="Sprawdź i złóż wniosek" color="purple" onClick={() => setActiveView('applications')} />
+                <Shortcut
+                    icon={WashingMachine}
+                    title="Pralnie i suszarnie"
+                    description="Zarezerwuj termin prania"
+                    color="blue"
+                    onClick={() => setActiveView('laundry')}
+                />
+                <Shortcut
+                    icon={Dumbbell}
+                    title="Boiska sportowe"
+                    description="Zarezerwuj obiekt sportowy"
+                    color="green"
+                    onClick={() => setActiveView('sports')}
+                />
+                <Shortcut
+                    icon={Wrench}
+                    title="Zgłoś usterkę"
+                    description="Przekaż problem administracji"
+                    color="orange"
+                    onClick={() => setActiveView('repairs')}
+                />
+                <Shortcut
+                    icon={FileText}
+                    title="Wnioski"
+                    description="Sprawdź i złóż wniosek"
+                    color="purple"
+                    onClick={() => setActiveView('applications')}
+                />
             </div>
 
             <div className="dashboard-grid">
@@ -346,12 +548,14 @@ function Dashboard({ setActiveView }) {
  * Komponent renderujący 12 dwugodzinnych slotów dla danego zasobu
  */
 function TimeSlots({ slots, prefix, courtId, selectedSlot, onSelect }) {
-    if (!slots || slots.length === 0) return <p className="slots-message">Brak dostępnych terminów.</p>;
+    if (!slots || slots.length === 0)
+        return <p className="slots-message">Brak dostępnych terminów.</p>;
 
     return (
         <div className="time-slots">
             {slots.map((slot) => {
-                const isSelected = selectedSlot?.courtId === courtId && selectedSlot?.startTime === slot.startTime;
+                const isSelected =
+                    selectedSlot?.courtId === courtId && selectedSlot?.startTime === slot.startTime;
                 const slotClass = `time-slot ${slot.available ? 'available' : 'unavailable'} ${isSelected ? 'selected' : ''}`;
 
                 return (
@@ -360,7 +564,9 @@ function TimeSlots({ slots, prefix, courtId, selectedSlot, onSelect }) {
                         key={`${prefix}-${slot.startTime}`}
                         className={slotClass}
                         disabled={!slot.available}
-                        onClick={() => onSelect({ courtId, startTime: slot.startTime, endTime: slot.endTime })}
+                        onClick={() =>
+                            onSelect({ courtId, startTime: slot.startTime, endTime: slot.endTime })
+                        }
                         title={slot.available ? 'Wybierz ten termin' : 'Termin niedostępny'}
                     >
                         <Clock size={14} />
@@ -375,7 +581,14 @@ function TimeSlots({ slots, prefix, courtId, selectedSlot, onSelect }) {
 /**
  * Uniwersalny panel listy aktywnych rezerwacji studenta
  */
-function UserReservationsPanel({ title, description, loading, reservations, icon: Icon, getLabel }) {
+function UserReservationsPanel({
+    title,
+    description,
+    loading,
+    reservations,
+    icon: Icon,
+    getLabel,
+}) {
     return (
         <section className="panel reservation-panel">
             <div className="panel-heading">
@@ -406,7 +619,10 @@ function UserReservationsPanel({ title, description, loading, reservations, icon
                                 </div>
                                 <div className="user-reservation-info">
                                     <strong>{getLabel(res)}</strong>
-                                    <span>Data: {res.reservationDate} · Godziny: {res.startTime}–{res.endTime}</span>
+                                    <span>
+                                        Data: {res.reservationDate} · Godziny: {res.startTime}–
+                                        {res.endTime}
+                                    </span>
                                 </div>
                             </div>
                             <span className="user-reservation-badge">Aktywna</span>
@@ -474,12 +690,16 @@ function Laundry({ currentUser }) {
                 if (floor) params.append('floor', floor);
                 if (type) params.append('type', type);
 
-                const res = await fetch(`${EQUIPMENT_API_URL}/availability?${params.toString()}`, { signal: controller.signal });
+                const res = await fetch(`${EQUIPMENT_API_URL}/availability?${params.toString()}`, {
+                    signal: controller.signal,
+                });
                 if (!res.ok) throw new Error(`Błąd serwera: ${res.status}`);
                 setEquipmentList(await res.json());
             } catch (err) {
                 if (err.name !== 'AbortError') {
-                    setError('Nie udało się pobrać dostępności urządzeń. Sprawdź, czy backend jest uruchomiony.');
+                    setError(
+                        'Nie udało się pobrać dostępności urządzeń. Sprawdź, czy backend jest uruchomiony.',
+                    );
                 }
             } finally {
                 if (!controller.signal.aborted) setLoading(false);
@@ -512,13 +732,18 @@ function Laundry({ currentUser }) {
             });
 
             const result = await res.json().catch(() => null);
-            if (!res.ok) throw new Error(result?.message || 'Nie udało się zarezerwować urządzenia.');
+            if (!res.ok)
+                throw new Error(result?.message || 'Nie udało się zarezerwować urządzenia.');
 
-            setBookingMessage(result?.message || 'Rezerwacja urządzenia została pomyślnie utworzona!');
+            setBookingMessage(
+                result?.message || 'Rezerwacja urządzenia została pomyślnie utworzona!',
+            );
             setSelectedSlot(null);
 
             // Odświeżenie dostępności i listy rezerwacji studenta
-            const refreshRes = await fetch(`${EQUIPMENT_API_URL}/availability?date=${encodeURIComponent(date)}&floor=${floor}&type=${type}`);
+            const refreshRes = await fetch(
+                `${EQUIPMENT_API_URL}/availability?date=${encodeURIComponent(date)}&floor=${floor}&type=${type}`,
+            );
             if (refreshRes.ok) setEquipmentList(await refreshRes.json());
             loadMyReservations();
         } catch (err) {
@@ -543,14 +768,19 @@ function Laundry({ currentUser }) {
                 loading={loadingMy}
                 reservations={myReservations}
                 icon={WashingMachine}
-                getLabel={(r) => `${r.type === 'Washing Machine' ? 'Pralka' : 'Suszarka'} ${r.equipmentNumber} (Piętro ${r.floor})`}
+                getLabel={(r) =>
+                    `${r.type === 'Washing Machine' ? 'Pralka' : 'Suszarka'} ${r.equipmentNumber} (Piętro ${r.floor})`
+                }
             />
 
             <section className="panel availability-panel">
                 <div className="panel-heading">
                     <div>
                         <h2>Pralki i suszarki</h2>
-                        <p>Wybierz piętro, datę oraz rodzaj urządzenia, a następnie kliknij wolną godzinę.</p>
+                        <p>
+                            Wybierz piętro, datę oraz rodzaj urządzenia, a następnie kliknij wolną
+                            godzinę.
+                        </p>
                     </div>
                     <WashingMachine size={25} />
                 </div>
@@ -562,7 +792,10 @@ function Laundry({ currentUser }) {
                             id="laundry-floor"
                             type="number"
                             value={floor}
-                            onChange={(e) => { setFloor(e.target.value); setSelectedSlot(null); }}
+                            onChange={(e) => {
+                                setFloor(e.target.value);
+                                setSelectedSlot(null);
+                            }}
                             placeholder="Wszystkie piętra"
                             min="0"
                             max="10"
@@ -590,14 +823,20 @@ function Laundry({ currentUser }) {
                             <button
                                 type="button"
                                 className={`choice ${type === 'Pralka' ? 'active' : ''}`}
-                                onClick={() => { setType('Pralka'); setSelectedSlot(null); }}
+                                onClick={() => {
+                                    setType('Pralka');
+                                    setSelectedSlot(null);
+                                }}
                             >
                                 <WashingMachine size={17} /> Pralki
                             </button>
                             <button
                                 type="button"
                                 className={`choice ${type === 'Suszarka' ? 'active' : ''}`}
-                                onClick={() => { setType('Suszarka'); setSelectedSlot(null); }}
+                                onClick={() => {
+                                    setType('Suszarka');
+                                    setSelectedSlot(null);
+                                }}
                             >
                                 <Clock size={17} /> Suszarki
                             </button>
@@ -610,13 +849,22 @@ function Laundry({ currentUser }) {
                 {bookingMessage && <p className="booking-success">{bookingMessage}</p>}
                 {bookingError && <p className="slots-error">{bookingError}</p>}
 
-                {!date && <p className="slots-message">Wybierz datę powyżej, aby wyświetlić dostępne urządzenia i godziny.</p>}
+                {!date && (
+                    <p className="slots-message">
+                        Wybierz datę powyżej, aby wyświetlić dostępne urządzenia i godziny.
+                    </p>
+                )}
 
                 {!loading && !error && date && equipmentList.length === 0 && (
                     <div className="availability-placeholder">
-                        <div className="availability-placeholder-icon"><WashingMachine size={25} /></div>
+                        <div className="availability-placeholder-icon">
+                            <WashingMachine size={25} />
+                        </div>
                         <h3>Brak urządzeń spełniających wybrane kryteria</h3>
-                        <p>Zmień numer piętra lub rodzaj urządzenia, aby sprawdzić inne dostępne zasoby.</p>
+                        <p>
+                            Zmień numer piętra lub rodzaj urządzenia, aby sprawdzić inne dostępne
+                            zasoby.
+                        </p>
                     </div>
                 )}
 
@@ -631,7 +879,9 @@ function Laundry({ currentUser }) {
                                 return (
                                     <article className="field-card" key={item.id}>
                                         <div className="field-card-heading">
-                                            <div className="field-icon"><Icon size={21} /></div>
+                                            <div className="field-icon">
+                                                <Icon size={21} />
+                                            </div>
                                             <div>
                                                 <h3>{title}</h3>
                                                 <p>Piętro {item.floor}</p>
@@ -642,8 +892,8 @@ function Laundry({ currentUser }) {
                                             {item.status === 'Maintenance'
                                                 ? 'Urządzenie jest obecnie w konserwacji.'
                                                 : item.status === 'Unavailable'
-                                                ? 'Urządzenie jest obecnie niedostępne.'
-                                                : 'Kliknij dostępną godzinę, aby ją wybrać.'}
+                                                  ? 'Urządzenie jest obecnie niedostępne.'
+                                                  : 'Kliknij dostępną godzinę, aby ją wybrać.'}
                                         </p>
 
                                         <TimeSlots
@@ -651,7 +901,11 @@ function Laundry({ currentUser }) {
                                             courtId={item.id}
                                             slots={item.slots}
                                             selectedSlot={selectedSlot}
-                                            onSelect={(slot) => { setSelectedSlot(slot); setBookingMessage(''); setBookingError(''); }}
+                                            onSelect={(slot) => {
+                                                setSelectedSlot(slot);
+                                                setBookingMessage('');
+                                                setBookingError('');
+                                            }}
                                         />
                                     </article>
                                 );
@@ -663,10 +917,20 @@ function Laundry({ currentUser }) {
                                 <div>
                                     <strong>Wybrany termin rezerwacji</strong>
                                     <p>
-                                        {selectedItem?.type === 'Washing Machine' ? 'Pralka' : 'Suszarka'} {selectedItem?.equipmentNumber} (Piętro {selectedItem?.floor}) · {date} · {selectedSlot.startTime}–{selectedSlot.endTime}
+                                        {selectedItem?.type === 'Washing Machine'
+                                            ? 'Pralka'
+                                            : 'Suszarka'}{' '}
+                                        {selectedItem?.equipmentNumber} (Piętro{' '}
+                                        {selectedItem?.floor}) · {date} · {selectedSlot.startTime}–
+                                        {selectedSlot.endTime}
                                     </p>
                                 </div>
-                                <button type="button" className="primary-button" onClick={reserveEquipment} disabled={booking}>
+                                <button
+                                    type="button"
+                                    className="primary-button"
+                                    onClick={reserveEquipment}
+                                    disabled={booking}
+                                >
                                     {booking ? 'Rezerwowanie...' : 'Zarezerwuj'}
                                 </button>
                             </div>
@@ -733,11 +997,17 @@ function Sports({ currentUser }) {
             setSelectedSlot(null);
 
             try {
-                const res = await fetch(`${SPORTS_API_URL}/availability?date=${encodeURIComponent(date)}`, { signal: controller.signal });
+                const res = await fetch(
+                    `${SPORTS_API_URL}/availability?date=${encodeURIComponent(date)}`,
+                    { signal: controller.signal },
+                );
                 if (!res.ok) throw new Error(`Błąd serwera: ${res.status}`);
                 setCourts(await res.json());
             } catch (err) {
-                if (err.name !== 'AbortError') setError('Nie udało się pobrać dostępności boisk. Sprawdź, czy backend jest uruchomiony.');
+                if (err.name !== 'AbortError')
+                    setError(
+                        'Nie udało się pobrać dostępności boisk. Sprawdź, czy backend jest uruchomiony.',
+                    );
             } finally {
                 if (!controller.signal.aborted) setLoading(false);
             }
@@ -773,7 +1043,9 @@ function Sports({ currentUser }) {
             setBookingMessage(result?.message || 'Rezerwacja boiska została pomyślnie utworzona!');
             setSelectedSlot(null);
 
-            const refresh = await fetch(`${SPORTS_API_URL}/availability?date=${encodeURIComponent(date)}`);
+            const refresh = await fetch(
+                `${SPORTS_API_URL}/availability?date=${encodeURIComponent(date)}`,
+            );
             if (refresh.ok) setCourts(await refresh.json());
             loadMyCourtReservations();
         } catch (err) {
@@ -785,7 +1057,10 @@ function Sports({ currentUser }) {
 
     return (
         <>
-            <PageHeading title="Boiska sportowe" description="Sprawdź harmonogram i wybierz termin dla wybranego boiska." />
+            <PageHeading
+                title="Boiska sportowe"
+                description="Sprawdź harmonogram i wybierz termin dla wybranego boiska."
+            />
 
             <UserReservationsPanel
                 title="Twoje rezerwacje boisk"
@@ -827,7 +1102,9 @@ function Sports({ currentUser }) {
                 {bookingMessage && <p className="booking-success">{bookingMessage}</p>}
                 {bookingError && <p className="slots-error">{bookingError}</p>}
 
-                {!date && <p className="slots-message">Wybierz datę, aby wyświetlić dostępne terminy.</p>}
+                {!date && (
+                    <p className="slots-message">Wybierz datę, aby wyświetlić dostępne terminy.</p>
+                )}
 
                 {!loading && !error && date && (
                     <>
@@ -839,7 +1116,9 @@ function Sports({ currentUser }) {
                                 return (
                                     <article className="field-card" key={field.id}>
                                         <div className="field-card-heading">
-                                            <div className="field-icon"><Icon size={21} /></div>
+                                            <div className="field-icon">
+                                                <Icon size={21} />
+                                            </div>
                                             <div>
                                                 <h3>{field.name}</h3>
                                                 <p>{field.subtitle}</p>
@@ -860,10 +1139,16 @@ function Sports({ currentUser }) {
                                                 courtId={court.id}
                                                 slots={court.slots}
                                                 selectedSlot={selectedSlot}
-                                                onSelect={(slot) => { setSelectedSlot(slot); setBookingMessage(''); setBookingError(''); }}
+                                                onSelect={(slot) => {
+                                                    setSelectedSlot(slot);
+                                                    setBookingMessage('');
+                                                    setBookingError('');
+                                                }}
                                             />
                                         ) : (
-                                            <p className="slots-message">Nie znaleziono boiska tego rodzaju w bazie danych.</p>
+                                            <p className="slots-message">
+                                                Nie znaleziono boiska tego rodzaju w bazie danych.
+                                            </p>
                                         )}
                                     </article>
                                 );
@@ -874,9 +1159,16 @@ function Sports({ currentUser }) {
                             <div className="booking-summary">
                                 <div>
                                     <strong>Wybrany termin</strong>
-                                    <p>{date} · {selectedSlot.startTime}–{selectedSlot.endTime}</p>
+                                    <p>
+                                        {date} · {selectedSlot.startTime}–{selectedSlot.endTime}
+                                    </p>
                                 </div>
-                                <button type="button" className="primary-button" onClick={reserveCourt} disabled={booking}>
+                                <button
+                                    type="button"
+                                    className="primary-button"
+                                    onClick={reserveCourt}
+                                    disabled={booking}
+                                >
                                     {booking ? 'Rezerwowanie...' : 'Zarezerwuj'}
                                 </button>
                             </div>
@@ -895,7 +1187,10 @@ function Repairs() {
 
     return (
         <>
-            <PageHeading title="Zgłoszenia usterek" description="Zgłoś problem techniczny w swoim akademiku." />
+            <PageHeading
+                title="Zgłoszenia usterek"
+                description="Zgłoś problem techniczny w swoim akademiku."
+            />
             <section className="panel form-panel">
                 <div className="panel-heading">
                     <div>
@@ -906,15 +1201,36 @@ function Repairs() {
                 </div>
 
                 <label htmlFor="repair-title">Tytuł zgłoszenia</label>
-                <input id="repair-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Np. Uszkodzona lampa" />
+                <input
+                    id="repair-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Np. Uszkodzona lampa"
+                />
 
                 <label htmlFor="repair-location">Lokalizacja usterki</label>
-                <input id="repair-location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Np. Pokój 204, piętro 2" />
+                <input
+                    id="repair-location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Np. Pokój 204, piętro 2"
+                />
 
                 <label htmlFor="repair-description">Opis problemu</label>
-                <textarea id="repair-description" rows="5" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Opisz, co się stało..." />
+                <textarea
+                    id="repair-description"
+                    rows="5"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Opisz, co się stało..."
+                />
 
-                <button className="primary-button" onClick={() => alert('Wysyłanie zgłoszeń zostanie dodane po podłączeniu backendu.')}>
+                <button
+                    className="primary-button"
+                    onClick={() =>
+                        alert('Wysyłanie zgłoszeń zostanie dodane po podłączeniu backendu.')
+                    }
+                >
                     <Plus size={18} /> Wyślij zgłoszenie
                 </button>
             </section>
@@ -925,7 +1241,10 @@ function Repairs() {
 function Applications() {
     return (
         <>
-            <PageHeading title="Wnioski" description="Zarządzaj swoimi wnioskami związanymi z akademikiem." />
+            <PageHeading
+                title="Wnioski"
+                description="Zarządzaj swoimi wnioskami związanymi z akademikiem."
+            />
             <section className="panel">
                 <div className="panel-heading">
                     <div>
@@ -934,7 +1253,11 @@ function Applications() {
                     </div>
                     <FileText size={25} />
                 </div>
-                <EmptyState icon={FileText} title="Brak wniosków" description="Twoje wnioski pojawią się tutaj po ich złożeniu." />
+                <EmptyState
+                    icon={FileText}
+                    title="Brak wniosków"
+                    description="Twoje wnioski pojawią się tutaj po ich złożeniu."
+                />
             </section>
         </>
     );
@@ -943,9 +1266,16 @@ function Applications() {
 function Announcements() {
     return (
         <>
-            <PageHeading title="Ogłoszenia" description="Aktualności i komunikaty administracji akademika." />
+            <PageHeading
+                title="Ogłoszenia"
+                description="Aktualności i komunikaty administracji akademika."
+            />
             <section className="panel">
-                <EmptyState icon={Megaphone} title="Brak ogłoszeń" description="Aktualnie nie ma żadnych opublikowanych ogłoszeń." />
+                <EmptyState
+                    icon={Megaphone}
+                    title="Brak ogłoszeń"
+                    description="Aktualnie nie ma żadnych opublikowanych ogłoszeń."
+                />
             </section>
         </>
     );
@@ -958,19 +1288,35 @@ function Profile({ currentUser }) {
     const details = [
         { label: 'Numer indeksu / albumu', value: currentUser?.studentNumber },
         { label: 'Kierunek studiów', value: currentUser?.fieldOfStudy },
-        { label: 'Rok studiów', value: currentUser?.yearOfStudy ? `${currentUser.yearOfStudy}. rok` : null },
-        { label: 'ID przypisanego pokoju', value: currentUser?.roomId ? `Pokój #${currentUser.roomId}` : null },
+        {
+            label: 'Rok studiów',
+            value: currentUser?.yearOfStudy ? `${currentUser.yearOfStudy}. rok` : null,
+        },
+        {
+            label: 'ID przypisanego pokoju',
+            value: currentUser?.roomId ? `Pokój #${currentUser.roomId}` : null,
+        },
         { label: 'ID studenta w bazie', value: currentUser?.id ? `#${currentUser.id}` : null },
-        { label: 'ID powiązanego usera', value: currentUser?.userId ? `User #${currentUser.userId}` : null },
+        {
+            label: 'ID powiązanego usera',
+            value: currentUser?.userId ? `User #${currentUser.userId}` : null,
+        },
     ];
 
     return (
         <>
-            <PageHeading title="Mój profil" description="Informacje o Twoim koncie i profilu studenta z bazy danych." />
+            <PageHeading
+                title="Mój profil"
+                description="Informacje o Twoim koncie i profilu studenta z bazy danych."
+            />
             <section className="panel profile-panel">
-                <div className="profile-avatar"><UserRound size={40} /></div>
+                <div className="profile-avatar">
+                    <UserRound size={40} />
+                </div>
                 <h2>Profil mieszkańca (tabela students)</h2>
-                <p className="panel-description">Dane pobrane bezpośrednio z tabeli students w bazie danych PostgreSQL:</p>
+                <p className="panel-description">
+                    Dane pobrane bezpośrednio z tabeli students w bazie danych PostgreSQL:
+                </p>
 
                 <div className="profile-details-grid">
                     {details.map(({ label, value }) => (
@@ -1038,7 +1384,11 @@ function App() {
 
     return (
         <div className="app-layout">
-            <Sidebar activeView={activeView} setActiveView={setActiveView} onLogout={handleLogout} />
+            <Sidebar
+                activeView={activeView}
+                setActiveView={setActiveView}
+                onLogout={handleLogout}
+            />
             <main className="main-area">
                 <Topbar activeView={activeView} currentUser={currentUser} />
                 <div className="page-content">{renderContent()}</div>
