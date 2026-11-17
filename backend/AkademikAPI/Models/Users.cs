@@ -1,8 +1,16 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using NpgsqlTypes;
 
 namespace AkademikAPI.Models;
 
-public enum UserRole { student, admin }
+public enum UserRole
+{
+    [PgName("Student")]
+    Student,
+
+    [PgName("Worker")]
+    Worker
+}
 
 [Table("users")]
 public class Users
@@ -23,5 +31,5 @@ public class Users
     public string PasswordHash { get; set; } = string.Empty;
 
     [Column("role")]
-    public UserRole Role { get; set; } = UserRole.student;
+    public UserRole Role { get; set; } = UserRole.Student;
 }

@@ -25,5 +25,5 @@ public class Student
     public int YearOfStudy { get; set; }
 
     [Column("room_id")]
-    public int RoomId { get; set; }
+    public int? RoomId { get; set; }
 }

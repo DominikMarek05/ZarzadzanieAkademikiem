@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 
 import './App.css';
+import { KreatorZakwaterowania } from './KreatorZakwaterowania';
 
 // Konfiguracja adresów API backendu .NET
 const API_BASE = 'http://localhost:5084/api';
@@ -108,7 +109,7 @@ function LoginView({ onLoginSuccess }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     studentNumber: studentNumber.trim(),
-                    firstName: studentNumber.trim(),
+                    firstName: firstName.trim(),
                     lastName: lastName.trim(),
                     email: email.trim(),
                     fieldOfStudy: fieldOfStudy.trim(),
@@ -170,9 +171,7 @@ function LoginView({ onLoginSuccess }) {
                     </p>
                 </div>
 
-                {error && (
-                    <div className="login-error-alert">{error}, sprawdź działanie Backendu!</div>
-                )}
+                {error && <div className="login-error-alert">{error}</div>}
                 {mode === 'login' ? (
                     <>
                         <form className="login-form" onSubmit={handleLogin}>
@@ -1350,7 +1349,12 @@ function App() {
     function handleLoginSuccess(studentData) {
         setCurrentUser(studentData);
         localStorage.setItem('akanet_student', JSON.stringify(studentData));
-        setActiveView('dashboard');
+
+        if (!studentData.roomId) {
+            setActiveView('zakwaterowanie');
+        } else {
+            setActiveView('dashboard');
+        }
     }
 
     function handleLogout() {
@@ -1361,6 +1365,24 @@ function App() {
     // Jeśli użytkownik nie jest zalogowany, wyświetl ekran logowania
     if (!currentUser) {
         return <LoginView onLoginSuccess={handleLoginSuccess} />;
+    }
+
+    if (!currentUser.roomId || activeView === 'zakwaterowanie') {
+        return (
+            <KreatorZakwaterowania
+                student={currentUser}
+                onLogout={() => {
+                    setCurrentUser(null);
+                    localStorage.removeItem('akanet_student');
+                }}
+                onZakwaterowanieSuccess={(podsumowanie) => {
+                    const zaktualizowany = { ...currentUser, roomId: podsumowanie.roomId };
+                    setCurrentUser(zaktualizowany);
+                    localStorage.setItem('akanet_student', JSON.stringify(zaktualizowany));
+                    setActiveView('dashboard');
+                }}
+            />
+        );
     }
 
     function renderContent() {

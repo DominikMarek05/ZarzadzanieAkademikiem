@@ -26,6 +26,10 @@ public class AkademikDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Rejestracja typów enum
+        modelBuilder.HasPostgresEnum<UserRole>("user_role");
+        modelBuilder.HasPostgresEnum<RoomPrefix>("room_prefix");
+
         // Relacja: Boisko sportowe posiada wiele rezerwacji
         modelBuilder.Entity<SportCourt>()
             .HasMany(c => c.Reservations)

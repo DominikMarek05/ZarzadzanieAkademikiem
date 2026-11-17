@@ -2,15 +2,21 @@ using Microsoft.EntityFrameworkCore;
 using AkademikAPI.Data;
 using Scalar.AspNetCore;
 using AkademikAPI.Models;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Konfiguracja bazy danych PostgreSQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+dataSourceBuilder.MapEnum<UserRole>("user_role");
+dataSourceBuilder.MapEnum<RoomPrefix>("room_prefix");
+var dataSource = dataSourceBuilder.Build();
+
 builder.Services.AddDbContext<AkademikDbContext>(options =>
-    options.UseNpgsql(connectionString, npgsqlOptions =>
-    {
+    options.UseNpgsql(dataSource, npgsqlOptions => {
         npgsqlOptions.MapEnum<UserRole>("user_role");
+        npgsqlOptions.MapEnum<RoomPrefix>("room_prefix");
     }));
 
 // Konfiguracja CORS pod aplikację frontendową w React (Vite)

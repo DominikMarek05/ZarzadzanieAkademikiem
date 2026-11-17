@@ -25,25 +25,24 @@ public class ZakwaterowanieController : ControllerBase
         if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             return BadRequest(new { message = "Podany adres e-mail jest już zajęty." });
 
-        var uzytkownik = new Users
-        {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
-            PasswordHash = "hash",
-            Role = UserRole.student
-        };
-        _context.Users.Add(uzytkownik);
-        await _context.SaveChangesAsync();
+        // Zapis użytkownika w bazie
+        await _context.Database.ExecuteSqlRawAsync(
+         @"INSERT INTO public.users (first_name, last_name, email, password_hash, role) 
+          VALUES ({0}, {1}, {2}, {3}, 'Student'::user_role);",
+           dto.FirstName, dto.LastName, dto.Email, "hash");
 
+        var newUserId = await _context.Users
+        .Where(u => u.Email == dto.Email)
+        .Select(u => u.Id)
+        .FirstOrDefaultAsync();
         // Zapisanie kandydata w tabeli students bez przypisanego pokoju
         var student = new Student
         {
-            UserId = uzytkownik.Id,
+            UserId = newUserId,
             StudentNumber = dto.StudentNumber,
             FieldOfStudy = dto.FieldOfStudy,
             YearOfStudy = dto.YearOfStudy,
-            RoomId = -1
+            RoomId = null
         };
         _context.Students.Add(student);
         await _context.SaveChangesAsync();
@@ -62,8 +61,11 @@ public class ZakwaterowanieController : ControllerBase
             student = new
             {
                 student.Id,
+                student.UserId,
                 student.StudentNumber,
-                Name = $"{uzytkownik.FirstName} {uzytkownik.LastName}",
+                student.FieldOfStudy,
+                student.YearOfStudy,
+                Name = $"{dto.FirstName} {dto.LastName}",
                 student.RoomId
             }
         });
@@ -111,7 +113,6 @@ public class ZakwaterowanieController : ControllerBase
                             {
                                 p.Id,
                                 RoomNumber = $"{s.UnitNumber}/{p.RoomPrefix}",
-                                Floor = s.Floor,
                                 p.Capacity,
                                 OccupiedBeds = _context.Students.Count(st => st.RoomId == p.Id)
                             }).ToListAsync();
@@ -119,7 +120,7 @@ public class ZakwaterowanieController : ControllerBase
         return Ok(pokoje);
     }
 
-    // 5. Przydzielenie pokoju kandydatowi
+    // Przydzielenie pokoju kandydatowi
     [HttpPost("przydziel")]
     public async Task<IActionResult> PrzydzielPokoj([FromBody] PrzydzialPokojuDto dto)
     {
@@ -153,10 +154,10 @@ public class ZakwaterowanieController : ControllerBase
 
         return Ok(new
         {
+            roomId = dto.RoomId,
             dormitoryName = pokojInfo.Dormitories.Name,
             dormitoryAddress = $"{pokojInfo.Dormitories.Address}, {pokojInfo.Dormitories.City}",
-            roomNumber = $"{pokojInfo.Unit.UnitNumber}/{pokojInfo.Pokoj.RoomPrefix}",
-            floor = pokojInfo.Unit.Floor
+            roomNumber = $"{pokojInfo.Unit.UnitNumber}/{pokojInfo.Pokoj.RoomPrefix}"
         });
     }
 }

@@ -4,10 +4,6 @@ using AkademikAPI.Data;
 
 namespace AkademikAPI.Controllers;
 
-/// <summary>
-/// Kontroler uwierzytelniania studenta.
-/// Zgodnie z wymaganiami logowanie weryfikuje wyłącznie tabelę 'students'.
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
@@ -19,9 +15,6 @@ public class AuthController : ControllerBase
         _context = context;
     }
 
-    /// <summary>
-    /// Logowanie studenta na podstawie numeru indeksu z tabeli students.
-    /// </summary>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -32,7 +25,7 @@ public class AuthController : ControllerBase
 
         var normalizedNumber = request.StudentNumber.Trim();
 
-        // Kluczowe wymaganie: weryfikacja wyłącznie w tabeli students
+        // Weryfikacja wyłącznie w tabeli students
         var student = await _context.Students
             .FirstOrDefaultAsync(s => s.StudentNumber == normalizedNumber);
 
@@ -40,6 +33,10 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(new { message = "Nie znaleziono studenta o podanym numerze indeksu w tabeli students." });
         }
+
+        // Pobranie imienia i nazwiska z tabeli users na podstawie klucza student.UserId
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == student.UserId);
 
         return Ok(new
         {
@@ -51,14 +48,12 @@ public class AuthController : ControllerBase
                 studentNumber = student.StudentNumber,
                 fieldOfStudy = student.FieldOfStudy,
                 yearOfStudy = student.YearOfStudy,
-                roomId = student.RoomId
+                roomId = student.RoomId,
+                name = user != null ? $"{user.FirstName} {user.LastName}" : null
             }
         });
     }
 
-    /// <summary>
-    /// Pobranie profilu studenta po Id (wyłącznie z tabeli students).
-    /// </summary>
     [HttpGet("student/{id:int}")]
     public async Task<IActionResult> GetStudent(int id)
     {

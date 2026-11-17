@@ -12,8 +12,6 @@ public class Unit
     public int DormitoryId { get; set; }
 
     [Column("unit_number")]
-    public string UnitNumber { get; set; } = string.Empty;
+    public int UnitNumber { get; set; }
 
-    [Column("floor")]
-    public int Floor { get; set; }
 }

@@ -1,9 +1,17 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using NpgsqlTypes;
 
 namespace AkademikAPI.Models;
 
 // Definiujemy enum odpowiadający typowi 'room_prefix' w bazie PostgreSQL
-public enum RoomPrefix { A, B }
+public enum RoomPrefix
+{
+    [PgName("A")]
+    A,
+
+    [PgName("B")]
+    B
+}
 
 [Table("room")] // Wskazuje EF Core, że tabela w bazie nazywa się "room"
 public class Pokoj

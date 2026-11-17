@@ -1282,3 +1282,25 @@ button {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
 }
+.wizard-user-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.wizard-user-info {
+    text-align: left;
+}
+
+.wizard-user-name {
+    display: block;
+    color: #1e293b;
+    font-size: 16px;
+}
+
+.wizard-user-index {
+    font-size: 13px;
+    color: #64748b;
+}
