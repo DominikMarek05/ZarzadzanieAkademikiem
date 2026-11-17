@@ -1,13 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using AkademikAPI.Data;
 using Scalar.AspNetCore;
+using AkademikAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Konfiguracja bazy danych PostgreSQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AkademikDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, npgsqlOptions =>
+    {
+        npgsqlOptions.MapEnum<UserRole>("user_role");
+    }));
 
 // Konfiguracja CORS pod aplikację frontendową w React (Vite)
 builder.Services.AddCors(options =>

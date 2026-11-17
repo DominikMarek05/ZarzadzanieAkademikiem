@@ -16,6 +16,11 @@ public class AkademikDbContext : DbContext
     public DbSet<Student> Students { get; set; }
     public DbSet<Equipment> Equipment { get; set; }
     public DbSet<EquipmentReservation> EquipmentReservations { get; set; }
+    public DbSet<Users> Users{ get; set; }
+    public DbSet<Dormitories> Dormitories{ get; set; }
+    public DbSet<Unit> Units{ get; set; }
+    public DbSet<AccommodationApplications> AccommodationApplications { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

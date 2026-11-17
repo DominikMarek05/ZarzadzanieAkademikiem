@@ -16,4 +16,7 @@ public class Pokoj
 
     [Column("room_prefix")]
     public RoomPrefix RoomPrefix { get; set; }
+
+    [Column("capacity")]
+    public int Capacity { get; set; } = 2;
 }
